@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Playlist Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        table, th, td { border: 1px solid black; padding: 10px; text-align: left; }
+        input, select, button { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Music Playlist Manager</h1>
+        <div id="songForm">
+            <input type="text" id="title" placeholder="Song Title">
+            <input type="text" id="artist" placeholder="Artist">
+            <input type="number" id="duration" placeholder="Duration (in minutes)">
+            <input type="text" id="genre" placeholder="Genre">
+            <button onclick="addSong()">Add Song</button>
+        </div>
+        <hr>
+        <h3>Sort By:</h3>
+        <button onclick="sortPlaylist('title')">Title</button>
+        <button onclick="sortPlaylist('artist')">Artist</button>
+        <button onclick="sortPlaylist('duration')">Duration</button>
+        <button onclick="sortPlaylist('genre')">Genre</button>
+        <hr>
+        <h3>Filter by Genre:</h3>
+        <input type="text" id="genreFilter" placeholder="Enter genre">
+        <button onclick="filterByGenre()">Filter</button>
+        <button onclick="resetFilter()">Reset Filter</button>
+        <hr>
+        <h3>Search Songs by Title/Artist:</h3>
+        <input type="text" id="searchQuery" placeholder="Search by Title/Artist">
+        <button onclick="searchSongs()">Search</button>
+        <hr>
+        <h3>Playlist</h3>
+        <table id="playlistTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Duration</th>
+                    <th>Genre</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="playlistBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let playlist = JSON.parse(localStorage.getItem('playlist')) || [];
+
+        function renderPlaylist(songs = playlist) {
+            const playlistBody = document.getElementById('playlistBody');
+            playlistBody.innerHTML = '';
+            songs.forEach((song, index) => {
+                const row = `
+                    <tr>
+                        <td>${song.title}</td>
+                        <td>${song.artist}</td>
+                        <td>${song.duration}</td>
+                        <td>${song.genre}</td>
+                        <td>
+                            <button onclick="deleteSong(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                playlistBody.innerHTML += row;
+            });
+        }
+
+        function addSong() {
+            const title = document.getElementById('title').value;
+            const artist = document.getElementById('artist').value;
+            const duration = document.getElementById('duration').value;
+            const genre = document.getElementById('genre').value;
+
+            if (title && artist && duration && genre) {
+                playlist.push({ title, artist, duration, genre });
+                localStorage.setItem('playlist', JSON.stringify(playlist));
+                renderPlaylist();
+                document.getElementById('title').value = '';
+                document.getElementById('artist').value = '';
+                document.getElementById('duration').value = '';
+                document.getElementById('genre').value = '';
+            } else {
+                alert('Please fill all fields!');
+            }
+        }
+
+        function deleteSong(index) {
+            playlist.splice(index, 1);
+            localStorage.setItem('playlist', JSON.stringify(playlist));
+            renderPlaylist();
+        }
+
+        function sortPlaylist(criteria) {
+            playlist.sort((a, b) => a[criteria].localeCompare(b[criteria]));
+            renderPlaylist();
+        }
+
+        function filterByGenre() {
+            const genreFilter = document.getElementById('genreFilter').value;
+            const filteredSongs = playlist.filter(song => song.genre.toLowerCase() === genreFilter.toLowerCase());
+            renderPlaylist(filteredSongs);
+        }
+
+        function resetFilter() {
+            renderPlaylist();
+        }
+
+        function searchSongs() {
+            const query = document.getElementById('searchQuery').value.toLowerCase();
+            const filteredSongs = playlist.filter(song => 
+                song.title.toLowerCase().includes(query) || 
+                song.artist.toLowerCase().includes(query)
+            );
+            renderPlaylist(filteredSongs);
+        }
+
+        window.onload = () => {
+            renderPlaylist();
+        };
+    </script>
+</body>
+</html>
